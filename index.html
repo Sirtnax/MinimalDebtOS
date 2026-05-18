@@ -239,9 +239,75 @@ nav{
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
 ::-webkit-scrollbar{width:2px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--line);border-radius:1px}
+
+/* LOCK SCREEN */
+#lockScreen{
+  position:fixed;inset:0;z-index:999;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 32px;
+}
+.lock-logo{
+  font-family:'JetBrains Mono',monospace;
+  font-size:1rem;font-weight:500;letter-spacing:.18em;
+  color:var(--muted);text-transform:uppercase;margin-bottom:48px;
+}
+.lock-dots{display:flex;gap:14px;margin-bottom:40px}
+.lock-dot{
+  width:14px;height:14px;border-radius:50%;
+  border:2px solid var(--line);background:transparent;
+  transition:all .15s;
+}
+.lock-dot.filled{background:var(--text);border-color:var(--text)}
+.lock-dot.error{background:var(--red);border-color:var(--red)}
+.lock-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:280px}
+.lock-key{
+  height:64px;border-radius:var(--r);border:1px solid var(--line);
+  background:var(--s1);color:var(--text);
+  font-family:'Inter',sans-serif;font-size:1.3rem;font-weight:400;
+  cursor:pointer;transition:all .1s;
+  box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:center;
+}
+.lock-key:active{background:var(--s2);transform:scale(.93)}
+.lock-key.del{font-size:.9rem;color:var(--sub)}
+.lock-key.empty{background:transparent;border:none;box-shadow:none;pointer-events:none}
+.lock-hint{font-size:.65rem;color:var(--dim);margin-top:28px;letter-spacing:.06em}
 </style>
 </head>
 <body>
+
+<!-- LOCK SCREEN -->
+<div id="lockScreen">
+  <div class="lock-logo">DebtOS</div>
+  <div class="lock-dots">
+    <div class="lock-dot" id="ld0"></div>
+    <div class="lock-dot" id="ld1"></div>
+    <div class="lock-dot" id="ld2"></div>
+    <div class="lock-dot" id="ld3"></div>
+    <div class="lock-dot" id="ld4"></div>
+    <div class="lock-dot" id="ld5"></div>
+    <div class="lock-dot" id="ld6"></div>
+    <div class="lock-dot" id="ld7"></div>
+    <div class="lock-dot" id="ld8"></div>
+    <div class="lock-dot" id="ld9"></div>
+  </div>
+  <div class="lock-pad">
+    <button class="lock-key" onclick="lkPress('1')">1</button>
+    <button class="lock-key" onclick="lkPress('2')">2</button>
+    <button class="lock-key" onclick="lkPress('3')">3</button>
+    <button class="lock-key" onclick="lkPress('4')">4</button>
+    <button class="lock-key" onclick="lkPress('5')">5</button>
+    <button class="lock-key" onclick="lkPress('6')">6</button>
+    <button class="lock-key" onclick="lkPress('7')">7</button>
+    <button class="lock-key" onclick="lkPress('8')">8</button>
+    <button class="lock-key" onclick="lkPress('9')">9</button>
+    <div class="lock-key empty"></div>
+    <button class="lock-key" onclick="lkPress('0')">0</button>
+    <button class="lock-key del" onclick="lkDel()">⌫</button>
+  </div>
+  <div class="lock-hint">Enter passcode to continue</div>
+</div>
 
 <div class="topbar">
   <div class="topbar-inner">
@@ -548,7 +614,48 @@ function toast(msg){
 
 document.getElementById('topDate').textContent =
   new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-renderDash(false);
+
+// LOCK
+const PASS = '0838459065';
+const LSK  = 'debtos_unlocked';
+let lkInput = '';
+
+function lkPress(d){
+  if(lkInput.length >= PASS.length) return;
+  lkInput += d;
+  lkRender();
+  if(lkInput.length === PASS.length){
+    if(lkInput === PASS){
+      sessionStorage.setItem(LSK,'1');
+      document.getElementById('lockScreen').style.display='none';
+      renderDash(false);
+    } else {
+      document.querySelectorAll('.lock-dot').forEach(el=>el.classList.add('error'));
+      setTimeout(()=>{
+        lkInput='';
+        document.querySelectorAll('.lock-dot').forEach(el=>{
+          el.classList.remove('error','filled');
+        });
+      }, 700);
+    }
+  }
+}
+
+function lkDel(){
+  lkInput = lkInput.slice(0,-1);
+  lkRender();
+}
+
+function lkRender(){
+  document.querySelectorAll('.lock-dot').forEach((el,i)=>{
+    el.classList.toggle('filled', i < lkInput.length);
+  });
+}
+
+if(sessionStorage.getItem(LSK)==='1'){
+  document.getElementById('lockScreen').style.display='none';
+  renderDash(false);
+}
 
 window.addEventListener('storage',e=>{
   if(e.key===SK){ S=load(); renderDash(true); if(cur===1)renderList(); }
