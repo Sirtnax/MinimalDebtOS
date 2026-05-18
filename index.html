@@ -30,14 +30,14 @@ body{color:var(--text);font-family:'Inter',sans-serif;display:flex;flex-directio
 #app{flex:1;overflow:hidden;position:relative}
 .page{
   position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  padding:calc(var(--safe-t)+72px) 0 calc(var(--safe-b)+88px);
+  padding:calc(var(--safe-t)+80px) 0 calc(var(--safe-b)+88px);
   opacity:0;pointer-events:none;transform:translateX(24px);
   transition:opacity .22s ease,transform .22s ease;
 }
 .page.active{opacity:1;pointer-events:all;transform:none}
 .page.left{transform:translateX(-24px)}
 .page-inner{
-  max-width:540px;margin:0 auto;padding:0 16px;
+  max-width:540px;margin:0 auto;padding:8px 16px 0;
 }
 
 /* TOP BAR */
@@ -86,6 +86,20 @@ nav{
 }
 .hero-num.flash{animation:flash .3s ease}
 @keyframes flash{0%{opacity:.15}100%{opacity:1}}
+.hero-num.hidden-val{
+  filter:blur(10px);user-select:none;
+  transition:filter .3s ease;
+}
+.hero-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.reveal-btn{
+  flex-shrink:0;
+  background:var(--s2);border:1px solid var(--line);
+  border-radius:99px;padding:5px 13px;
+  font-size:.62rem;font-weight:600;color:var(--muted);
+  letter-spacing:.08em;text-transform:uppercase;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.reveal-btn:active{background:var(--s3)}
 .pills{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
 .pill{
   font-size:.65rem;color:var(--sub);
@@ -325,7 +339,10 @@ nav{
     <!-- Hero: Total Debt -->
     <div class="hero">
       <div class="hero-label">Total debt</div>
-      <div class="hero-num mono" id="dTotal">฿0</div>
+      <div class="hero-row">
+        <div class="hero-num mono hidden-val" id="dTotal">฿0</div>
+        <button class="reveal-btn" id="revealBtn" onclick="toggleReveal()">Show</button>
+      </div>
       <div class="pills">
         <div class="pill"><b id="dCount">0</b> accounts</div>
         <div class="pill">avg <b id="dAvgRate">0%</b>/yr</div>
@@ -614,6 +631,16 @@ function toast(msg){
 
 document.getElementById('topDate').textContent =
   new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+
+// REVEAL
+let _revealed = false;
+function toggleReveal(){
+  _revealed = !_revealed;
+  const el = document.getElementById('dTotal');
+  const btn = document.getElementById('revealBtn');
+  el.classList.toggle('hidden-val', !_revealed);
+  btn.textContent = _revealed ? 'Hide' : 'Show';
+}
 
 // LOCK
 const PASS = '0838459065';
