@@ -528,6 +528,19 @@ nav {
 
 .d-int { font-size: .63rem; color: var(--sub); margin-top: 2px; }
 
+/* Last-updated badge per debt */
+.d-stale {
+  font-size: .6rem;
+  color: var(--dim);
+  margin-top: 3px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.d-stale.stale-warn {
+  color: var(--red);
+  font-weight: 600;
+}
+
 .total-row {
   background: var(--s1);
   border: 1px solid var(--line);
@@ -799,4 +812,3 @@ nav {
   margin-top: 28px;
   letter-spacing: .06em;
 }
-
