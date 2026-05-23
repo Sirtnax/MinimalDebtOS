@@ -22,6 +22,12 @@
     <div class="lock-dot" id="ld1"></div>
     <div class="lock-dot" id="ld2"></div>
     <div class="lock-dot" id="ld3"></div>
+    <div class="lock-dot" id="ld4"></div>
+    <div class="lock-dot" id="ld5"></div>
+    <div class="lock-dot" id="ld6"></div>
+    <div class="lock-dot" id="ld7"></div>
+    <div class="lock-dot" id="ld8"></div>
+    <div class="lock-dot" id="ld9"></div>
   </div>
   <div class="lock-pad" role="group" aria-label="Number pad">
     <button class="lock-key" onclick="lkPress('1')" aria-label="1">1</button>
@@ -44,7 +50,10 @@
 <div class="topbar" role="banner">
   <div class="topbar-inner">
     <span class="topbar-title" id="topTitle">Overview</span>
-    <span class="topbar-date mono" id="topDate"></span>
+    <div style="text-align:right">
+      <span class="topbar-date mono" id="topDate"></span>
+      <div id="lastUpdated" style="font-size:.55rem;color:var(--dim);font-family:'JetBrains Mono',monospace;margin-top:2px"></div>
+    </div>
   </div>
 </div>
 
