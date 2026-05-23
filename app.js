@@ -8,17 +8,8 @@
 const SK = 'debtos_v7';
 
 // ── Default data ─────────────────────────────────────────────
-const INIT_DEBTS = [
-  { id: 1,  name: 'Finnix',          rate: 0.33,  cutoff: '',   due: '20', full: 15768, debt: 13600, note: '', lastUpdated: null },
-  { id: 2,  name: 'Rabbit Cash',     rate: 0.33,  cutoff: '30', due: '15', full: 25300, debt: 25500, note: '', lastUpdated: null },
-  { id: 3,  name: 'Promise',         rate: 0.25,  cutoff: '',   due: '31', full: 10000, debt: 9700,  note: '', lastUpdated: null },
-  { id: 4,  name: 'KTC Proud',       rate: 0.25,  cutoff: '20', due: '5',  full: 34500, debt: 35222, note: '', lastUpdated: null },
-  { id: 5,  name: 'Umay',            rate: 0.198, cutoff: '',   due: '2',  full: 72000, debt: 72848, note: '', lastUpdated: null },
-  { id: 6,  name: 'UOB Credit',      rate: 0.16,  cutoff: '20', due: '13', full: 96000, debt: 83068, note: '', lastUpdated: null },
-  { id: 7,  name: 'Samsung Finance', rate: 0,     cutoff: '',   due: '1',  full: 16228, debt: 4056,  note: '', lastUpdated: null },
-  { id: 8,  name: 'Shopee',          rate: 0,     cutoff: '',   due: '',   full: 0,     debt: 1030,  note: '', lastUpdated: null },
-  { id: 9,  name: 'Thunder',         rate: 0.33,  cutoff: '',   due: '',   full: 40000, debt: 38500, note: '', lastUpdated: null },
-];
+// No seed data — all debts are stored in localStorage only (never in source code)
+const INIT_DEBTS = [];
 
 // ── State ─────────────────────────────────────────────────────
 /**
@@ -473,19 +464,45 @@ function toggleReveal() {
 
 // ── Lock screen ───────────────────────────────────────────────
 // NOTE: This is a UI-only PIN — it does not provide server-side security.
-// Anyone with access to the device storage can read the data.
-// Do NOT rely on this for actual data protection.
-const PASS = '5903';
-const LSK  = 'debtos_unlocked'; // sessionStorage key
+// The PIN is stored as a SHA-256 hash; the raw PIN never appears in source code.
+//
+// To change your PIN:
+//   1. Open browser console and run: hashPin('your_new_pin')
+//   2. Copy the hash output and replace the value of PASS_HASH below.
+//
+// Default hash below is SHA-256 of '0000' — change it immediately.
+const PASS_HASH = localStorage.getItem('debtos_pin_hash') || '9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0'; // SHA-256 of '0000'
+const PIN_LEN   = parseInt(localStorage.getItem('debtos_pin_len') || '4', 10);
+const LSK       = 'debtos_unlocked'; // sessionStorage key
 let lkInput = '';
 
-function lkPress(d) {
-  if (lkInput.length >= PASS.length) return;
+async function hashPin(pin) {
+  const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
+  const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  console.log('Hash for PIN "' + pin + '":', hash);
+  return hash;
+}
+
+/**
+ * Change the PIN. Call from browser console: await setPin('1234')
+ * This saves the hash to localStorage — your raw PIN never touches the source code.
+ */
+async function setPin(newPin) {
+  if (!newPin || newPin.length < 4) { console.error('PIN must be at least 4 digits'); return; }
+  const hash = await hashPin(newPin);
+  localStorage.setItem('debtos_pin_hash', hash);
+  localStorage.setItem('debtos_pin_len', String(newPin.length));
+  console.log('✅ PIN updated. Please reload the app.');
+}
+
+async function lkPress(d) {
+  if (lkInput.length >= PIN_LEN) return;
   lkInput += d;
   lkRender();
 
-  if (lkInput.length === PASS.length) {
-    if (lkInput === PASS) {
+  if (lkInput.length === PIN_LEN) {
+    const hash = await hashPin(lkInput);
+    if (hash === PASS_HASH) {
       sessionStorage.setItem(LSK, '1');
       document.getElementById('lockScreen').style.display = 'none';
       renderDash(false);
@@ -510,6 +527,19 @@ function lkRender() {
     el.classList.toggle('filled', i < lkInput.length);
   });
 }
+
+// Render correct number of dots based on PIN_LEN
+(function initDots() {
+  const container = document.getElementById('lockDots');
+  if (!container) return;
+  container.innerHTML = '';
+  for (let i = 0; i < PIN_LEN; i++) {
+    const d = document.createElement('div');
+    d.className = 'lock-dot';
+    d.id = 'ld' + i;
+    container.appendChild(d);
+  }
+})()
 
 
 // ── Event delegation setup ────────────────────────────────────
