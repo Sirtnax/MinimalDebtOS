@@ -9,15 +9,15 @@ const SK = 'debtos_v7';
 
 // ── Default data ─────────────────────────────────────────────
 const INIT_DEBTS = [
-  { id: 1,  name: 'Finnix',          rate: 0.33,  cutoff: '',   due: '20', full: 15768, debt: 13600, note: '', lastUpdated: null },
-  { id: 2,  name: 'Rabbit Cash',     rate: 0.33,  cutoff: '30', due: '15', full: 25300, debt: 25500, note: '', lastUpdated: null },
-  { id: 3,  name: 'Promise',         rate: 0.25,  cutoff: '',   due: '31', full: 10000, debt: 9700,  note: '', lastUpdated: null },
-  { id: 4,  name: 'KTC Proud',       rate: 0.25,  cutoff: '20', due: '5',  full: 34500, debt: 35222, note: '', lastUpdated: null },
-  { id: 5,  name: 'Umay',            rate: 0.198, cutoff: '',   due: '2',  full: 72000, debt: 72848, note: '', lastUpdated: null },
-  { id: 6,  name: 'UOB Credit',      rate: 0.16,  cutoff: '20', due: '13', full: 96000, debt: 83068, note: '', lastUpdated: null },
-  { id: 7,  name: 'Samsung Finance', rate: 0,     cutoff: '',   due: '1',  full: 16228, debt: 4056,  note: '', lastUpdated: null },
-  { id: 8,  name: 'Shopee',          rate: 0,     cutoff: '',   due: '',   full: 0,     debt: 1030,  note: '', lastUpdated: null },
-  { id: 9,  name: 'Thunder',         rate: 0.33,  cutoff: '',   due: '',   full: 40000, debt: 38500, note: '', lastUpdated: null },
+  { id: 1,  name: 'Finnix',          rate: 0.33,  cutoff: '',   due: '20', full: 15768, debt: 13600, note: '' },
+  { id: 2,  name: 'Rabbit Cash',     rate: 0.33,  cutoff: '30', due: '15', full: 25300, debt: 25500, note: '' },
+  { id: 3,  name: 'Promise',         rate: 0.25,  cutoff: '',   due: '31', full: 10000, debt: 9700,  note: '' },
+  { id: 4,  name: 'KTC Proud',       rate: 0.25,  cutoff: '20', due: '5',  full: 34500, debt: 35222, note: '' },
+  { id: 5,  name: 'Umay',            rate: 0.198, cutoff: '',   due: '2',  full: 72000, debt: 72848, note: '' },
+  { id: 6,  name: 'UOB Credit',      rate: 0.16,  cutoff: '20', due: '13', full: 96000, debt: 83068, note: '' },
+  { id: 7,  name: 'Samsung Finance', rate: 0,     cutoff: '',   due: '1',  full: 16228, debt: 4056,  note: '' },
+  { id: 8,  name: 'Shopee',          rate: 0,     cutoff: '',   due: '',   full: 0,     debt: 1030,  note: '' },
+  { id: 9,  name: 'Thunder',         rate: 0.33,  cutoff: '',   due: '',   full: 40000, debt: 38500, note: '' },
 ];
 
 // ── State ─────────────────────────────────────────────────────
@@ -40,7 +40,11 @@ function save() {
     localStorage.setItem(SK, JSON.stringify(S));
     localStorage.setItem('debtos_last_saved', new Date().toISOString());
   } catch (e) {
-    console.warn('DebtOS: could not persist state to localStorage', e);
+    if (e.name === 'QuotaExceededError') {
+      toast('Storage full - unable to save');
+    } else {
+      console.warn('DebtOS: could not persist state to localStorage', e);
+    }
   }
 }
 
@@ -178,8 +182,8 @@ function renderDash(flash) {
   _t0 = Date.now();
 
   (function tick() {
-    // Pause ticker when tab is hidden to save CPU
-    if (document.hidden) {
+    // Pause ticker when tab is hidden or overlay is open to save CPU
+    if (document.hidden || document.getElementById('overlay').classList.contains('on')) {
       _raf = requestAnimationFrame(tick);
       return;
     }
@@ -198,29 +202,6 @@ document.addEventListener('visibilitychange', () => {
 });
 
 
-// ── Last-updated badge helper ─────────────────────────────────
-/**
- * Returns HTML string for the per-debt last-updated badge.
- * Goes red if not updated in more than STALE_DAYS days.
- */
-const STALE_DAYS = 7;
-
-function lastUpdatedBadge(iso) {
-  if (!iso) {
-    return `<div class="d-stale">never updated</div>`;
-  }
-  const diff  = Math.floor((Date.now() - new Date(iso)) / 86400000); // days
-  const d     = new Date(iso);
-  const label = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-              + ' · '
-              + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-
-  if (diff >= STALE_DAYS) {
-    return `<div class="d-stale stale-warn">⚠ ${diff} days ago</div>`;
-  }
-  return `<div class="d-stale">${label}</div>`;
-}
-
 // ── Debt List ─────────────────────────────────────────────────
 function renderList() {
   const elList  = document.getElementById('debtList');
@@ -230,8 +211,7 @@ function renderList() {
     elList.innerHTML = [...S.debts]
       .sort((a, b) => b.debt - a.debt)
       .map(d => `
-        <div class="debt-item" role="listitem" onclick="openSheet(${d.id})" tabindex="0"
-             onkeydown="if(event.key==='Enter'||event.key===' ')openSheet(${d.id})"
+        <div class="debt-item" role="listitem" data-id="${d.id}" tabindex="0"
              aria-label="${escapeHTML(d.name)}: ${fmtB(d.debt)}">
           <div class="d-dot" style="background:${dotCol(d.rate)}" aria-hidden="true"></div>
           <div class="d-main">
@@ -240,13 +220,32 @@ function renderList() {
               [d.rate ? (d.rate * 100).toFixed(2) + '%/yr' : null, d.due ? `due ${d.due}th` : null]
                 .filter(Boolean).join(' · ') || '—'
             }</div>
-            ${lastUpdatedBadge(d.lastUpdated)}
           </div>
           <div class="d-right">
             <div class="d-amount mono" style="color:${d.debt > 0 ? 'var(--text)' : 'var(--dim)'}">${fmtB(d.debt)}</div>
             ${d.rate ? `<div class="d-int">${fmtB(d.debt * d.rate / 12, 0)}/mo</div>` : ''}
           </div>
         </div>`).join('');
+
+    // Event delegation for debt items (XSS-safe, no inline handlers)
+    elList.addEventListener('click', (e) => {
+      const item = e.target.closest('.debt-item');
+      if (item) {
+        const id = Number(item.dataset.id);
+        openSheet(id);
+      }
+    });
+
+    elList.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const item = e.target.closest('.debt-item');
+        if (item) {
+          const id = Number(item.dataset.id);
+          openSheet(id);
+        }
+      }
+    });
   }
 
   if (elTotal) elTotal.textContent = fmtB(totDebt());
@@ -256,13 +255,17 @@ function renderList() {
 // ── Bottom Sheet ──────────────────────────────────────────────
 function openSheet(id) {
   const isNew = id === null;
-  const d = isNew
-    ? { id: S.nextId, name: '', rate: '', cutoff: '', due: '', full: '', debt: '', note: '' }
-    : { ...S.debts.find(x => x.id === id) };
+  let d;
 
-  if (!isNew && !d) {
-    toast('Debt not found');
-    return;
+  if (isNew) {
+    d = { id: S.nextId, name: '', rate: '', cutoff: '', due: '', full: '', debt: '', note: '' };
+  } else {
+    d = S.debts.find(x => x.id === id);
+    if (!d) {
+      toast('Debt not found');
+      return;
+    }
+    d = { ...d };
   }
 
   document.getElementById('sheet').innerHTML = `
@@ -322,34 +325,33 @@ function closeSheet() {
   document.getElementById('overlay').classList.remove('on');
 }
 
-// Close on backdrop click
-document.getElementById('overlay').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeSheet();
-});
-
-// Close on Escape key
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && document.getElementById('overlay').classList.contains('on')) {
-    closeSheet();
-  }
-});
-
 
 // ── CRUD ──────────────────────────────────────────────────────
 function saveDebt(id, isNew) {
   const name = document.getElementById('fn').value.trim();
   if (!name) { toast('Name required'); return; }
 
+  const rate = parseFloat(document.getElementById('fr').value) || 0;
+  if (isNaN(rate) || rate < 0 || rate > 1) {
+    toast('Interest rate must be 0–1');
+    return;
+  }
+
+  const debt = parseFloat(document.getElementById('fd').value) || 0;
+  if (debt < 0) {
+    toast('Balance cannot be negative');
+    return;
+  }
+
   const obj = {
     id,
     name,
-    rate:        parseFloat(document.getElementById('fr').value)  || 0,
-    debt:        parseFloat(document.getElementById('fd').value)  || 0,
-    full:        parseFloat(document.getElementById('ff').value)  || 0,
-    due:         document.getElementById('fdu').value.trim(),
-    cutoff:      '',
-    note:        '',
-    lastUpdated: new Date().toISOString(),
+    rate,
+    debt,
+    full:   parseFloat(document.getElementById('ff').value)  || 0,
+    due:    document.getElementById('fdu').value.trim(),
+    cutoff: '',
+    note:   '',
   };
 
   if (isNew) {
@@ -387,7 +389,7 @@ function quickPay(id) {
   const amt = parseFloat(document.getElementById('fpay').value);
   if (!amt || amt <= 0) { toast('Enter amount'); return; }
 
-  S.debts = S.debts.map(d => d.id !== id ? d : { ...d, debt: Math.max(0, d.debt - amt), lastUpdated: new Date().toISOString() });
+  S.debts = S.debts.map(d => d.id !== id ? d : { ...d, debt: Math.max(0, d.debt - amt) });
   S.totalPaid = (S.totalPaid || 0) + amt;
 
   save();
@@ -448,7 +450,8 @@ function escapeAttr(str) {
 // ── Lock screen ───────────────────────────────────────────────
 // NOTE: This is a UI-only PIN — it does not provide server-side security.
 // Anyone with access to the device storage can read the data.
-const PASS = '0838459065';
+// Do NOT rely on this for actual data protection.
+const PASS = '5903';
 const LSK  = 'debtos_unlocked'; // sessionStorage key
 let lkInput = '';
 
@@ -485,6 +488,25 @@ function lkRender() {
 }
 
 
+// ── Event delegation setup ────────────────────────────────────
+function initEventDelegation() {
+  // Close overlay on backdrop click (prevent duplicate listeners)
+  const overlay = document.getElementById('overlay');
+  if (overlay) {
+    overlay.addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeSheet();
+    });
+  }
+
+  // Close overlay on Escape key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('overlay').classList.contains('on')) {
+      closeSheet();
+    }
+  });
+}
+
+
 // ── Cross-tab sync ────────────────────────────────────────────
 window.addEventListener('storage', e => {
   if (e.key === SK) {
@@ -498,6 +520,9 @@ window.addEventListener('storage', e => {
 // ── Init ──────────────────────────────────────────────────────
 document.getElementById('topDate').textContent =
   new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+// Initialize event delegation once
+initEventDelegation();
 
 // Skip lock if already authenticated this session
 if (sessionStorage.getItem(LSK) === '1') {
