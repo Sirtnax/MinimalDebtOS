@@ -407,7 +407,7 @@ function escapeAttr(str) {
 // ── Lock screen ───────────────────────────────────────────────
 // NOTE: This is a UI-only PIN — it does not provide server-side security.
 // Anyone with access to the device storage can read the data.
-const PASS = '0838459065';
+const PASS = '1234';
 const LSK  = 'debtos_unlocked'; // sessionStorage key
 let lkInput = '';
 
