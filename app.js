@@ -9,15 +9,15 @@ const SK = 'debtos_v7';
 
 // ── Default data ─────────────────────────────────────────────
 const INIT_DEBTS = [
-  { id: 1,  name: 'Finnix',          rate: 0.33,  cutoff: '',   due: '20', full: 15768, debt: 13600, note: '' },
-  { id: 2,  name: 'Rabbit Cash',     rate: 0.33,  cutoff: '30', due: '15', full: 25300, debt: 25500, note: '' },
-  { id: 3,  name: 'Promise',         rate: 0.25,  cutoff: '',   due: '31', full: 10000, debt: 9700,  note: '' },
-  { id: 4,  name: 'KTC Proud',       rate: 0.25,  cutoff: '20', due: '5',  full: 34500, debt: 35222, note: '' },
-  { id: 5,  name: 'Umay',            rate: 0.198, cutoff: '',   due: '2',  full: 72000, debt: 72848, note: '' },
-  { id: 6,  name: 'UOB Credit',      rate: 0.16,  cutoff: '20', due: '13', full: 96000, debt: 83068, note: '' },
-  { id: 7,  name: 'Samsung Finance', rate: 0,     cutoff: '',   due: '1',  full: 16228, debt: 4056,  note: '' },
-  { id: 8,  name: 'Shopee',          rate: 0,     cutoff: '',   due: '',   full: 0,     debt: 1030,  note: '' },
-  { id: 9,  name: 'Thunder',         rate: 0.33,  cutoff: '',   due: '',   full: 40000, debt: 38500, note: '' },
+  { id: 1,  name: 'Finnix',          rate: 0.33,  cutoff: '',   due: '20', full: 15768, debt: 13600, note: '', lastUpdated: null },
+  { id: 2,  name: 'Rabbit Cash',     rate: 0.33,  cutoff: '30', due: '15', full: 25300, debt: 25500, note: '', lastUpdated: null },
+  { id: 3,  name: 'Promise',         rate: 0.25,  cutoff: '',   due: '31', full: 10000, debt: 9700,  note: '', lastUpdated: null },
+  { id: 4,  name: 'KTC Proud',       rate: 0.25,  cutoff: '20', due: '5',  full: 34500, debt: 35222, note: '', lastUpdated: null },
+  { id: 5,  name: 'Umay',            rate: 0.198, cutoff: '',   due: '2',  full: 72000, debt: 72848, note: '', lastUpdated: null },
+  { id: 6,  name: 'UOB Credit',      rate: 0.16,  cutoff: '20', due: '13', full: 96000, debt: 83068, note: '', lastUpdated: null },
+  { id: 7,  name: 'Samsung Finance', rate: 0,     cutoff: '',   due: '1',  full: 16228, debt: 4056,  note: '', lastUpdated: null },
+  { id: 8,  name: 'Shopee',          rate: 0,     cutoff: '',   due: '',   full: 0,     debt: 1030,  note: '', lastUpdated: null },
+  { id: 9,  name: 'Thunder',         rate: 0.33,  cutoff: '',   due: '',   full: 40000, debt: 38500, note: '', lastUpdated: null },
 ];
 
 // ── State ─────────────────────────────────────────────────────
@@ -198,6 +198,29 @@ document.addEventListener('visibilitychange', () => {
 });
 
 
+// ── Last-updated badge helper ─────────────────────────────────
+/**
+ * Returns HTML string for the per-debt last-updated badge.
+ * Goes red if not updated in more than STALE_DAYS days.
+ */
+const STALE_DAYS = 7;
+
+function lastUpdatedBadge(iso) {
+  if (!iso) {
+    return `<div class="d-stale">never updated</div>`;
+  }
+  const diff  = Math.floor((Date.now() - new Date(iso)) / 86400000); // days
+  const d     = new Date(iso);
+  const label = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+              + ' · '
+              + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+  if (diff >= STALE_DAYS) {
+    return `<div class="d-stale stale-warn">⚠ ${diff} days ago</div>`;
+  }
+  return `<div class="d-stale">${label}</div>`;
+}
+
 // ── Debt List ─────────────────────────────────────────────────
 function renderList() {
   const elList  = document.getElementById('debtList');
@@ -217,6 +240,7 @@ function renderList() {
               [d.rate ? (d.rate * 100).toFixed(2) + '%/yr' : null, d.due ? `due ${d.due}th` : null]
                 .filter(Boolean).join(' · ') || '—'
             }</div>
+            ${lastUpdatedBadge(d.lastUpdated)}
           </div>
           <div class="d-right">
             <div class="d-amount mono" style="color:${d.debt > 0 ? 'var(--text)' : 'var(--dim)'}">${fmtB(d.debt)}</div>
@@ -319,12 +343,13 @@ function saveDebt(id, isNew) {
   const obj = {
     id,
     name,
-    rate:   parseFloat(document.getElementById('fr').value)  || 0,
-    debt:   parseFloat(document.getElementById('fd').value)  || 0,
-    full:   parseFloat(document.getElementById('ff').value)  || 0,
-    due:    document.getElementById('fdu').value.trim(),
-    cutoff: '',
-    note:   '',
+    rate:        parseFloat(document.getElementById('fr').value)  || 0,
+    debt:        parseFloat(document.getElementById('fd').value)  || 0,
+    full:        parseFloat(document.getElementById('ff').value)  || 0,
+    due:         document.getElementById('fdu').value.trim(),
+    cutoff:      '',
+    note:        '',
+    lastUpdated: new Date().toISOString(),
   };
 
   if (isNew) {
@@ -362,7 +387,7 @@ function quickPay(id) {
   const amt = parseFloat(document.getElementById('fpay').value);
   if (!amt || amt <= 0) { toast('Enter amount'); return; }
 
-  S.debts = S.debts.map(d => d.id !== id ? d : { ...d, debt: Math.max(0, d.debt - amt) });
+  S.debts = S.debts.map(d => d.id !== id ? d : { ...d, debt: Math.max(0, d.debt - amt), lastUpdated: new Date().toISOString() });
   S.totalPaid = (S.totalPaid || 0) + amt;
 
   save();
@@ -423,7 +448,7 @@ function escapeAttr(str) {
 // ── Lock screen ───────────────────────────────────────────────
 // NOTE: This is a UI-only PIN — it does not provide server-side security.
 // Anyone with access to the device storage can read the data.
-const PASS = '5903';
+const PASS = '0838459065';
 const LSK  = 'debtos_unlocked'; // sessionStorage key
 let lkInput = '';
 
