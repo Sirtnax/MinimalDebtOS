@@ -1,5 +1,5 @@
 /* ============================================================
-   DebtOS — app.js
+   DebtOS — app.js (Enhanced)
    ============================================================ */
 
 'use strict';
@@ -74,6 +74,26 @@ const intYear  = () => S.debts.reduce((a, d) => a + d.debt * (d.rate || 0), 0);
  * @param {number} r  Annual interest rate (decimal)
  */
 const dotCol = r => !r ? 'var(--dim)' : r >= 0.3 ? 'var(--red)' : r >= 0.2 ? 'var(--yel)' : 'var(--grn)';
+
+/**
+ * Escape a string for safe insertion as HTML text content.
+ * @param {string} str
+ */
+function escapeHTML(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * Escape a string for safe use inside an HTML attribute value.
+ * @param {string} str
+ */
+function escapeAttr(str) {
+  return escapeHTML(str);
+}
 
 
 // ── Navigation ────────────────────────────────────────────────
@@ -244,7 +264,7 @@ function renderList() {
           </div>
         </div>`).join('');
 
-    // Event delegation for debt items (XSS-safe, no inline handlers)
+    // Event delegation for debt items (XSS-safe)
     elList.addEventListener('click', (e) => {
       const item = e.target.closest('.debt-item');
       if (item) {
@@ -320,16 +340,24 @@ function openSheet(id) {
     </div>
     <div class="pay-row">
       <input class="pay-input" type="number" id="fpay" placeholder="Amount (฿)" min="0" aria-label="Payment amount">
-      <button class="pay-btn" onclick="quickPay(${d.id})" aria-label="Confirm payment">Pay ✓</button>
+      <button class="pay-btn" id="payBtn" aria-label="Confirm payment">Pay ✓</button>
     </div>
 
     <div class="sh-actions">
-      ${!isNew ? `<button class="btn-d" onclick="delDebt(${d.id})" aria-label="Delete ${escapeAttr(d.name)}">Delete</button>` : ''}
-      <button class="btn-g" onclick="closeSheet()">Cancel</button>
-      <button class="btn-p" onclick="saveDebt(${d.id}, ${isNew})">Save</button>
+      ${!isNew ? `<button class="btn-d" id="delBtn" aria-label="Delete ${escapeAttr(d.name)}">Delete</button>` : ''}
+      <button class="btn-g" id="cancelBtn">Cancel</button>
+      <button class="btn-p" id="saveBtn">Save</button>
     </div>`;
 
   document.getElementById('overlay').classList.add('on');
+
+  // Event listeners
+  document.getElementById('saveBtn').addEventListener('click', () => saveDebt(d.id, isNew));
+  document.getElementById('cancelBtn').addEventListener('click', closeSheet);
+  document.getElementById('payBtn').addEventListener('click', () => quickPay(d.id));
+  if (!isNew) {
+    document.getElementById('delBtn').addEventListener('click', () => delDebt(d.id));
+  }
 
   // Focus first field for accessibility
   setTimeout(() => {
@@ -443,28 +471,6 @@ function toggleReveal() {
 }
 
 
-// ── XSS helpers ───────────────────────────────────────────────
-/**
- * Escape a string for safe insertion as HTML text content.
- * @param {string} str
- */
-function escapeHTML(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-/**
- * Escape a string for safe use inside an HTML attribute value.
- * @param {string} str
- */
-function escapeAttr(str) {
-  return escapeHTML(str);
-}
-
-
 // ── Lock screen ───────────────────────────────────────────────
 // NOTE: This is a UI-only PIN — it does not provide server-side security.
 // Anyone with access to the device storage can read the data.
@@ -508,7 +514,22 @@ function lkRender() {
 
 // ── Event delegation setup ────────────────────────────────────
 function initEventDelegation() {
-  // Close overlay on backdrop click (prevent duplicate listeners)
+  // Lock screen buttons
+  document.querySelectorAll('.lock-key[data-key]').forEach(btn => {
+    btn.addEventListener('click', () => lkPress(btn.dataset.key));
+  });
+
+  document.getElementById('lkDelBtn').addEventListener('click', lkDel);
+
+  // Navigation
+  document.getElementById('nb0').addEventListener('click', () => goPage(0));
+  document.getElementById('nb1').addEventListener('click', () => goPage(1));
+
+  // Debt management
+  document.getElementById('addDebtBtn').addEventListener('click', () => openSheet(null));
+  document.getElementById('revealBtn').addEventListener('click', toggleReveal);
+
+  // Close overlay on backdrop click
   const overlay = document.getElementById('overlay');
   if (overlay) {
     overlay.addEventListener('click', e => {
@@ -534,6 +555,12 @@ window.addEventListener('storage', e => {
   }
 });
 
+// ── Service Worker registration ────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(err => {
+    console.warn('Service Worker registration failed:', err);
+  });
+}
 
 // ── Init ──────────────────────────────────────────────────────
 document.getElementById('topDate').textContent =
