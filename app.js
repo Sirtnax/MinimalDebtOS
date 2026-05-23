@@ -38,9 +38,22 @@ function load() {
 function save() {
   try {
     localStorage.setItem(SK, JSON.stringify(S));
+    localStorage.setItem('debtos_last_saved', new Date().toISOString());
   } catch (e) {
     console.warn('DebtOS: could not persist state to localStorage', e);
   }
+}
+
+function updateLastUpdated() {
+  const el  = document.getElementById('lastUpdated');
+  if (!el) return;
+  const raw = localStorage.getItem('debtos_last_saved');
+  if (!raw) { el.textContent = 'never updated'; return; }
+  const d = new Date(raw);
+  el.textContent = 'updated '
+    + d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    + ' · '
+    + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
 let S = load();
@@ -156,6 +169,9 @@ function renderDash(flash) {
         </div>`;
       }).join('');
   }
+
+  // Last updated timestamp
+  updateLastUpdated();
 
   // Restart live ticker
   cancelAnimationFrame(_raf);
@@ -407,7 +423,7 @@ function escapeAttr(str) {
 // ── Lock screen ───────────────────────────────────────────────
 // NOTE: This is a UI-only PIN — it does not provide server-side security.
 // Anyone with access to the device storage can read the data.
-const PASS = '1234';
+const PASS = '5903';
 const LSK  = 'debtos_unlocked'; // sessionStorage key
 let lkInput = '';
 
@@ -463,4 +479,3 @@ if (sessionStorage.getItem(LSK) === '1') {
   document.getElementById('lockScreen').style.display = 'none';
   renderDash(false);
 }
-
