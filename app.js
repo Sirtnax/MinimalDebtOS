@@ -237,23 +237,32 @@ function renderList() {
   if (elList) {
     elList.innerHTML = [...S.debts]
       .sort((a, b) => b.debt - a.debt)
-      .map(d => `
+      .map(d => {
+        const accent = dotCol(d.rate);
+        const util   = d.full > 0 ? Math.min(100, (d.debt / d.full) * 100) : 0;
+        const utilBar = d.full > 0
+          ? `<div class="d-progress-wrap"><div class="d-progress-bar" style="width:${util.toFixed(1)}%;background:${accent}"></div></div>`
+          : '';
+        return `
         <div class="debt-item" role="listitem" data-id="${d.id}" tabindex="0"
+             style="--d-accent:${accent}"
              aria-label="${escapeHTML(d.name)}: ${fmtB(d.debt)}">
-          <div class="d-dot" style="background:${dotCol(d.rate)}" aria-hidden="true"></div>
+          <div class="d-dot" style="background:${accent};box-shadow:0 0 6px ${accent}40" aria-hidden="true"></div>
           <div class="d-main">
             <div class="d-name">${escapeHTML(d.name)}</div>
             <div class="d-sub">${
               [d.rate ? (d.rate * 100).toFixed(2) + '%/yr' : null, d.due ? `due ${d.due}th` : null]
                 .filter(Boolean).join(' · ') || '—'
             }</div>
+            ${utilBar}
             ${lastUpdatedBadge(d.lastUpdated)}
           </div>
           <div class="d-right">
             <div class="d-amount mono" style="color:${d.debt > 0 ? 'var(--text)' : 'var(--dim)'}">${fmtB(d.debt)}</div>
-            ${d.rate ? `<div class="d-int">${fmtB(d.debt * d.rate / 12, 0)}/mo</div>` : ''}
+            ${d.rate ? `<div class="d-int" style="color:${accent}88">${fmtB(d.debt * d.rate / 12, 0)}/mo</div>` : ''}
           </div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
 
     // Event delegation for debt items (XSS-safe)
     elList.addEventListener('click', (e) => {
