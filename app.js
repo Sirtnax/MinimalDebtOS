@@ -480,7 +480,7 @@ function toggleReveal() {
 //   2. Copy the hash output and replace the value of PASS_HASH below.
 //
 // Default hash below is SHA-256 of '0000' — change it immediately.
-const PASS_HASH = localStorage.getItem('debtos_pin_hash') || '9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0'; // SHA-256 of '0000'
+const PASS_HASH = localStorage.getItem('debtos_pin_hash') || '59320b07d510325ab07f78daa20413e3c0d0b486d7e4ef6547abacd14dc82eea'; // SHA-256 of default PIN
 const PIN_LEN   = parseInt(localStorage.getItem('debtos_pin_len') || '4', 10);
 const LSK       = 'debtos_unlocked'; // sessionStorage key
 let lkInput = '';
