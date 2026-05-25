@@ -192,6 +192,7 @@ function renderList() {
           <div class="d-right">
             <div class="d-amount mono" style="color:${d.debt>0?'var(--text)':'var(--dim)'}">${fmtB(d.debt)}</div>
             ${d.rate ? `<div class="d-int" style="color:${accent}">${fmtB(d.debt*d.rate/12,0)}/mo</div>` : ''}
+            ${d.minPay ? `<div class="d-int" style="color:var(--dim)">min ${fmtB(d.minPay)}</div>` : ''}
           </div>
         </div>`;
       }).join('');
@@ -216,7 +217,7 @@ function renderList() {
 function openSheet(id) {
   const isNew = id === null;
   let d = isNew
-    ? { id: S.nextId, name: '', rate: '', cutoff: '', due: '', full: '', debt: '', note: '' }
+    ? { id: S.nextId, name: '', rate: '', cutoff: '', due: '', full: '', debt: '', minPay: '', note: '' }
     : S.debts.find(x => x.id === id);
   if (!d) { toast('Debt not found'); return; }
   d = { ...d };
@@ -247,6 +248,10 @@ function openSheet(id) {
         <label for="fdu">Due date (day)</label>
         <input id="fdu" value="${escapeAttr(d.due||'')}" placeholder="5" maxlength="2">
       </div>
+    </div>
+    <div class="field">
+      <label for="fmin">Min. payment (฿/mo)</label>
+      <input id="fmin" type="number" value="${d.minPay||''}" placeholder="ขั้นต่ำต่อเดือน" min="0">
     </div>
     <hr class="divider">
     <div style="font-size:.6rem;color:var(--sub);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Quick pay</div>
@@ -285,6 +290,7 @@ function saveDebt(id, isNew) {
     id, name, rate, debt,
     full:        parseFloat(document.getElementById('ff').value) || 0,
     due:         document.getElementById('fdu').value.trim(),
+    minPay:      parseFloat(document.getElementById('fmin').value) || 0,
     cutoff:      '', note: '',
     lastUpdated: new Date().toISOString(),
   };
