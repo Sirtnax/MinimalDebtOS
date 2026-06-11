@@ -2,7 +2,7 @@
    DebtOS — Service Worker
    ============================================================ */
 
-const CACHE_NAME = 'debtos-v1';
+const CACHE_NAME = 'debtos-v2';
 const urlsToCache = [
   '/MinimalDebtOS/',
   '/MinimalDebtOS/index.html',
@@ -37,42 +37,43 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event — network-first for app shell (so updates reach users),
+// cache-first for everything else (fonts, icons)
 self.addEventListener('fetch', event => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') {
+  if (event.request.method !== 'GET') return;
+
+  const url = new URL(event.request.url);
+  const isAppShell = url.origin === self.location.origin;
+
+  if (isAppShell) {
+    // Network-first: always try to get the latest, fall back to cache offline
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() =>
+          caches.match(event.request)
+            .then(r => r || caches.match('/MinimalDebtOS/index.html'))
+        )
+    );
     return;
   }
 
+  // Cache-first for cross-origin assets (fonts etc.)
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Return cached version if available
-        if (response) {
-          return response;
-        }
-
-        // Otherwise, fetch from network
-        return fetch(event.request)
-          .then(response => {
-            // Don't cache non-successful responses
-            if (!response || response.status !== 200 || response.type === 'error') {
-              return response;
-            }
-
-            // Cache successful responses
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
-
-            return response;
-          })
-          .catch(() => {
-            // Return a fallback if offline and no cache
-            return caches.match('/MinimalDebtOS/index.html');
-          });
-      })
+    caches.match(event.request).then(response => {
+      if (response) return response;
+      return fetch(event.request).then(response => {
+        if (!response || response.status !== 200 || response.type === 'error') return response;
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        return response;
+      });
+    })
   );
 });

@@ -5,8 +5,8 @@
   "scope": "/MinimalDebtOS/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f0f0ed",
-  "theme_color": "#f0f0ed",
+  "background_color": "#0c0c0e",
+  "theme_color": "#0c0c0e",
   "icons": [
     {
       "src": "icon-192.png",

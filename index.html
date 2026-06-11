@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#f0f0ed">
+<meta name="theme-color" content="#0c0c0e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DebtOS">
 <title>DebtOS</title>
@@ -41,9 +41,14 @@
 <div class="topbar" role="banner">
   <div class="topbar-inner">
     <span class="topbar-title" id="topTitle">Overview</span>
-    <div style="text-align:right">
-      <span class="topbar-date mono" id="topDate"></span>
-      <div id="lastUpdated" style="font-size:.55rem;color:var(--dim);font-family:'JetBrains Mono',monospace;margin-top:2px"></div>
+    <div class="topbar-right">
+      <div style="text-align:right">
+        <span class="topbar-date mono" id="topDate"></span>
+        <div id="lastUpdated" style="font-size:.55rem;color:var(--dim);font-family:'JetBrains Mono',monospace;margin-top:2px"></div>
+      </div>
+      <button class="gear-btn" id="gearBtn" onclick="openSettings()" aria-label="Settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
     </div>
   </div>
 </div>
@@ -157,6 +162,9 @@
 
 <!-- TOAST NOTIFICATION -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- HIDDEN IMPORT INPUT -->
+<input type="file" id="importFile" accept="application/json,.json" style="display:none">
 
 <script src="app.js" defer></script>
 </body>

@@ -982,3 +982,186 @@ nav {
   letter-spacing: .1em;
   font-weight: 500;
 }
+
+
+/* ================================================================
+   PRODUCTION POLISH — v3
+   ================================================================ */
+
+/* Topbar right cluster + settings gear */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gear-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: var(--glass);
+  color: var(--sub);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--tx-s);
+  flex-shrink: 0;
+}
+
+.gear-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gear-btn:active {
+  background: var(--glass3);
+  transform: scale(.9) rotate(30deg);
+  color: var(--text);
+}
+
+/* Empty states */
+.empty-state {
+  padding: 36px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.empty-title {
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.empty-state.clear .empty-title { color: var(--grn); }
+
+.empty-sub {
+  font-size: .68rem;
+  color: var(--sub);
+  line-height: 1.5;
+  max-width: 260px;
+}
+
+.empty-cta {
+  margin-top: 10px;
+  padding: 10px 22px;
+  border-radius: 99px;
+  border: 1px solid var(--line2);
+  background: var(--glass2);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: .74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--tx-s);
+}
+
+.empty-cta:active {
+  background: var(--glass3);
+  transform: scale(.95);
+}
+
+/* Due-date urgency */
+.due-urgent {
+  color: var(--red);
+  font-weight: 700;
+}
+
+/* Paid-off debt rows */
+.debt-item.is-paid { opacity: .55; }
+.debt-item.is-paid .d-name { text-decoration: line-through; text-decoration-color: var(--dim); }
+.debt-item.is-paid .d-sub  { color: var(--grn); }
+
+/* Quick-pay preset chips */
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.chip {
+  padding: 7px 13px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: var(--glass);
+  color: var(--sub);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .62rem;
+  cursor: pointer;
+  transition: all var(--tx-s);
+  white-space: nowrap;
+}
+
+.chip:active {
+  background: var(--grn-dim);
+  border-color: rgba(0,214,143,.3);
+  color: var(--grn);
+  transform: scale(.95);
+}
+
+/* Two-tap delete armed state */
+.btn-d.armed {
+  background: var(--red);
+  color: #fff;
+  animation: armedPulse 1s ease-in-out infinite;
+}
+
+@keyframes armedPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,45,64,.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(255,45,64,0); }
+}
+
+/* Settings sheet */
+.set-section-label {
+  font-size: .55rem;
+  color: var(--dim);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.set-hint {
+  font-size: .64rem;
+  color: var(--sub);
+  line-height: 1.55;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+}
+
+.set-meta {
+  font-size: .6rem;
+  color: var(--dim);
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.w-full  { width: 100%; }
+.flex-1  { flex: 1; }
+
+/* Error toast variant */
+.toast.err {
+  border-color: rgba(255,77,94,.4);
+  color: var(--red);
+  background: #1d1114;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
