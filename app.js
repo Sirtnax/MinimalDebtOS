@@ -408,13 +408,20 @@ function toast(msg, kind) {
 }
 
 // ── Reveal toggle ─────────────────────────────────────────────
-let _revealed = false;
-function toggleReveal() {
-  _revealed = !_revealed;
+let _revealed = localStorage.getItem('debtos_revealed') === '1';
+
+function applyReveal() {
   const el  = document.getElementById('dTotal');
   const btn = document.getElementById('revealBtn');
   if (el)  el.classList.toggle('hidden-val', !_revealed);
   if (btn) btn.textContent = _revealed ? 'Hide' : 'Show';
+  document.body.classList.toggle('amounts-hidden', !_revealed);
+}
+
+function toggleReveal() {
+  _revealed = !_revealed;
+  localStorage.setItem('debtos_revealed', _revealed ? '1' : '0');
+  applyReveal();
 }
 
 // ── Lock screen ───────────────────────────────────────────────
@@ -565,6 +572,7 @@ function initLockDots() {
 // Init dots after DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   initLockDots();
+  applyReveal();
 
   // Close overlay on backdrop click
   const overlay = document.getElementById('overlay');
