@@ -302,6 +302,15 @@ nav {
   transition: filter .4s ease;
 }
 
+/* Privacy mode — blurs amounts on the Debts list too */
+body.amounts-hidden .d-amount,
+body.amounts-hidden .d-int,
+body.amounts-hidden .total-row-val {
+  filter: blur(8px);
+  user-select: none;
+  transition: filter .4s ease;
+}
+
 .hero-row {
   display: flex;
   align-items: center;
