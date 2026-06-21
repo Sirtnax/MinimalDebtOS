@@ -567,6 +567,38 @@ body.amounts-hidden .total-row-val {
   margin-bottom: 14px;
 }
 
+/* Filter chips */
+.filter-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+
+.filter-chip {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--line2);
+  background: var(--glass2);
+  color: var(--dim);
+  font-size: .65rem;
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  letter-spacing: .04em;
+  cursor: pointer;
+  transition: all var(--tx-s);
+}
+.filter-chip.on {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
 .list-head-label {
   font-size: .58rem;
   color: var(--dim);
