@@ -584,7 +584,7 @@ body.amounts-hidden .total-row-val {
   padding: 5px 12px;
   border-radius: 99px;
   border: 1px solid var(--line2);
-  background: var(--glass2);
+  background: transparent;
   color: var(--dim);
   font-size: .65rem;
   font-family: 'Syne', sans-serif;
@@ -592,6 +592,9 @@ body.amounts-hidden .total-row-val {
   letter-spacing: .04em;
   cursor: pointer;
   transition: all var(--tx-s);
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
 }
 .filter-chip.on {
   background: var(--text);
