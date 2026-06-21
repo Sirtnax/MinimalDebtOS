@@ -1,3 +1,4 @@
+
 /* ============================================================
    DebtOS — app.js (Enhanced)
    ============================================================ */
@@ -194,6 +195,18 @@ function lastUpdatedBadge(iso) {
     : `<div class="d-stale">${label}</div>`;
 }
 
+// ── Debt List Sort ────────────────────────────────────────────
+let _sort = 'balance';
+
+function setSort(mode) {
+  _sort = mode;
+  ['balance','interest','paid'].forEach(m => {
+    const el = document.getElementById('fc-' + m);
+    if (el) el.classList.toggle('on', m === mode);
+  });
+  renderList();
+}
+
 // ── Debt List ─────────────────────────────────────────────────
 function renderList() {
   const elList  = document.getElementById('debtList');
@@ -208,7 +221,11 @@ function renderList() {
       </div>`;
     } else {
     elList.innerHTML = [...S.debts]
-      .sort((a, b) => b.debt - a.debt)
+      .sort((a, b) => {
+        if (_sort === 'interest') return (b.debt * b.rate) - (a.debt * a.rate);
+        if (_sort === 'paid')    return (b.totalPaid || 0) - (a.totalPaid || 0);
+        return b.debt - a.debt; // balance (default)
+      })
       .map(d => {
         const paid    = d.debt <= 0;
         const accent  = paid ? 'var(--grn)' : dotCol(d.rate);
